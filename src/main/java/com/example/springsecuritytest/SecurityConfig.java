@@ -6,20 +6,29 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+// @EnableWebSecurity //kun for ældre versioner af spring boot
 public class SecurityConfig {
+
+    // Custom login stuff, tjek klassen
+    private final CustomLoginSuccessHandler successHandler;
+
+    public SecurityConfig(CustomLoginSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/public").permitAll() // "/" + "/public" er for alle
-                        .anyRequest().authenticated()               // Alt andet kræver login
+                        .requestMatchers("/", "/public").permitAll()
+                        .requestMatchers("/admin-dashboard/**").hasRole("ADMIN")// Admin har side for sig
+                        .anyRequest().authenticated() // Alt andet kan tilgås med normalt login
                 )
                 .formLogin(form -> form
-                        .defaultSuccessUrl("/secret", true)         // path hvor man lander efter succesfuldt login
+                        .successHandler(successHandler) // path hvor man lander efter succesfuldt login, her bruger vi custom solution for at skælne mellem admin og user
                         .permitAll()
                 )
-                .logout(logout -> logout
+                .logout(logout -> logout.logoutUrl("/logout")
                         .logoutSuccessUrl("/")
                         .permitAll()
                 );
@@ -27,20 +36,5 @@ public class SecurityConfig {
         return http.build();
     }
 
-// alle kan se disse sider / & /public, hvis under sider skal tilføjes markeres de med én stjerne for KUN den /under-aktuel/* og 2 stjerner for ALLE undersider /under/**          */
-//Hvor bliver man redirected til ved succesfuldt login: /secret                 */
-// Hvor bliver man redirected til ved succesfuldt logout: /                 */
 }
 
-
-
-
-//
-//                     http
-//                             .authorizeHttpRequests(auth -> auth
-//                             .requestMatchers("/","public").permitAll() <- for alle
-//                             .anyRequest.authenticated()) <- anything else needs AUTH
-//        .formLogin(form -> form.defaultSuccessUrl("/secret",true))
-//        .logout(logout -> logout.logoutSuccessUrl("/").permitAll());
-//
-//        return http.build();

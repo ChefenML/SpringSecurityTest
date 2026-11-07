@@ -19,7 +19,10 @@ public class UserConfig {
         UserDetails user = User.builder()
                 .username("test")
                 .password(encoder.encode("test"))
-                .roles("USER")
+                //.roles("ADMIN") //roles og authorities gør det samme,
+                // men beskriver rollerne marginalt anderledes roles("USER") bliver til authorities("ROLE_USER")
+                //så du skal huske op du slår rollerne op med hasRole() eller hasAuthority at der kan forkomme uhensigsmæssige problemer
+                .authorities("ROLE_ADMIN")
                 .build();
 
         return new InMemoryUserDetailsManager(user);
